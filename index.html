@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trip Planner</title>
+<style>
+:root{--bg:#f4f6f4;--card:#fff;--ink:#18211d;--mute:#5f6b65;--line:#dfe5e1;--acc:#0f766e;--accbg:#e0f2ef;--warn:#b42318;--warnbg:#fdecea;--ok:#067647;--okbg:#e3f5ec;--star:#d99a0b;--s1:#6366f1;--s2:#d97706;--s3:#0f766e;--s4:#64748b;--s5:#a855f7}
+@media(prefers-color-scheme:dark){:root{--bg:#111513;--card:#1a201d;--ink:#eef3f0;--mute:#9aa7a0;--line:#2a332f;--acc:#4fd1c0;--accbg:#16322e;--warn:#ff8a7a;--warnbg:#3a1d19;--ok:#5fd39a;--okbg:#16332a;--star:#f2b83a;--s1:#8b8df5;--s2:#f0a53a;--s3:#4fd1c0;--s4:#94a3b8;--s5:#c58af0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif}
+#app{max-width:560px;margin:0 auto;padding:12px 12px 84px}
+h1{font-size:18px;margin:4px 0 2px}
+.sub{color:var(--mute);font-size:12px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin:8px 0}
+.days{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;white-space:nowrap;cursor:pointer}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+@media(prefers-color-scheme:dark){.chip.on{color:#06201c}}
+.map{padding:0;overflow:hidden}
+.map svg{display:block;width:100%;height:auto}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+.stats div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center}
+.stats b{display:block;font-size:16px}
+.stats span{font-size:11px;color:var(--mute)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}
+@media(prefers-color-scheme:dark){.btn{color:#06201c}}
+.btn.ghost{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+.btn:disabled{opacity:.5;cursor:default}
+.link{background:none;border:0;color:var(--mute);font:inherit;text-decoration:underline;cursor:pointer;padding:8px 0}
+.link.danger{color:var(--warn)}
+a.maps{font-size:12px;color:var(--acc)}
+.chk{font-size:13px;color:var(--mute)}
+.msg{font-size:13px;color:var(--ok);margin:6px 2px}
+.stop{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:start}
+.num{width:28px;height:28px;border-radius:50%;background:var(--accbg);color:var(--acc);display:grid;place-items:center;font-weight:700;font-size:13px}
+.num.anchor{background:var(--acc);color:#fff}
+@media(prefers-color-scheme:dark){.num.anchor{color:#06201c}}
+.name{font-weight:600}
+.tag{font-size:11px;color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-left:6px;font-weight:400}
+.leg{font-size:12px;color:var(--mute)}
+.driveline{font-size:12px;color:var(--acc);margin:2px 0 2px 38px}
+.times{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mute);margin-top:4px}
+.times select{padding:3px 6px;font-size:12px}
+.ctl{display:flex;gap:2px}
+.ic{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;width:30px;height:30px;font:inherit;cursor:pointer}
+.ic:disabled{opacity:.35;cursor:default}
+.stars button{background:none;border:0;font-size:20px;line-height:1;padding:2px 1px;color:var(--line);cursor:pointer}
+.stars button.on{color:var(--star)}
+.fields{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;min-width:0}
+input.cost{width:96px}
+input.note{flex:1;min-width:120px}
+label.f{display:block;font-size:12px;color:var(--mute);margin:8px 0 3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid2 input,.grid2 select,.sw input{width:100%}
+.sw{position:relative}
+.dd{margin-top:4px}
+.dd:empty{display:none}
+.dd .box{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.sr-item{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:9px 10px;border-bottom:1px solid var(--line);cursor:pointer}
+.sr-item:last-child{border-bottom:0}
+.sr-item:hover{background:var(--accbg)}
+.sr-item svg{width:18px;height:18px;margin-top:2px;fill:var(--acc)}
+.sr-msg{padding:10px;font-size:13px;color:var(--mute)}
+.sr-msg.err{color:var(--warn)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+nav div{display:flex;width:100%;max-width:560px}
+nav button{flex:1;background:none;border:0;padding:12px 4px;font:inherit;color:var(--mute);cursor:pointer;font-weight:600}
+nav button.on{color:var(--acc);box-shadow:inset 0 3px 0 var(--acc)}
+.bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%}
+.line{display:flex;justify-content:space-between;gap:8px}
+.big{font-size:26px;font-weight:700}
+.warn{color:var(--warn);font-weight:600}.ok{color:var(--ok);font-weight:600}
+.banner{border-radius:10px;padding:9px 11px;font-size:13px;margin:8px 0;background:var(--okbg);color:var(--ok)}
+.banner.late{background:var(--warnbg);color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:5px 3px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+.err{color:var(--warn);font-size:13px;min-height:18px;margin:6px 0 0}
+.note-s{font-size:12px;color:var(--mute)}
+details summary{cursor:pointer;font-size:13px;color:var(--mute);padding:6px 0}
+input.title{font-size:18px;font-weight:700;border:0;background:transparent;padding:4px 0;width:100%}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ===== CORE START (pure logic, tested separately) =====
+const ROAD=1.3, SPEED=60;
+const DEFAULT_STAY={Sight:60,Food:60,Cafe:45,Activity:120,Other:30};
+function hav(a,b){const R=6371,t=Math.PI/180;const dLa=(b.lat-a.lat)*t,dLo=(b.lng-a.lng)*t;const x=Math.sin(dLa/2)**2+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
+function roadKm(a,b){return hav(a,b)*ROAD;}
+function estLeg(a,b){const km=roadKm(a,b);return {km,min:km/SPEED*60,real:false};}
+function routeKm(start,stops,end){let p=start,s=0;for(const q of stops){s+=roadKm(p,q);p=q;}return s+roadKm(p,end);}
+function bestOrder(start,stops,end){
+  const n=stops.length; if(n<2) return stops.slice();
+  if(n<=8){
+    let best=null,bd=Infinity; const used=Array(n).fill(false),cur=[];
+    (function rec(prev,d){
+      if(d>=bd) return;
+      if(cur.length===n){const t=d+roadKm(prev,end); if(t<bd){bd=t;best=cur.slice();} return;}
+      for(let i=0;i<n;i++){ if(used[i]) continue; used[i]=true; cur.push(stops[i]); rec(stops[i],d+roadKm(prev,stops[i])); cur.pop(); used[i]=false; }
+    })(start,0);
+    return best;
+  }
+  let rem=stops.slice(),ord=[],p=start;
+  while(rem.length){let k=0,m=Infinity;rem.forEach((q,i)=>{const d=roadKm(p,q);if(d<m){m=d;k=i;}});p=rem.splice(k,1)[0];ord.push(p);}
+  let imp=true;
+  while(imp){imp=false;for(let i=0;i<n-1;i++)for(let j=i+1;j<n;j++){const c=ord.slice(0,i).concat(ord.slice(i,j+1).reverse(),ord.slice(j+1));if(routeKm(start,c,end)<routeKm(start,ord,end)-1e-9){ord=c;imp=true;}}}
+  return ord;
+}
+function toMin(s){const m=/^(\d{1,2}):(\d{2})$/.exec(s||'');if(!m)return 480;return Math.min(+m[1],23)*60+Math.min(+m[2],59);}
+function fmtT(min){const day=Math.floor(Math.round(min)/1440);const m0=((Math.round(min)%1440)+1440)%1440;const h=Math.floor(m0/60),m=m0%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+(day>0?' +'+day+'d':'');}
+function fmtDur(min){min=Math.round(min);const h=Math.floor(min/60);return h?h+'h '+String(min%60).padStart(2,'0')+'m':min+'m';}
+function timeline(day,legFn){
+  let t=toMin(day.startTime),prev=day.start,drive=0,stay=0,km=0,real=true;
+  const rows=[{kind:'start',leave:t}];
+  day.stops.forEach((s,i)=>{const L=legFn(prev,s);t+=L.min;drive+=L.min;km+=L.km;if(!L.real)real=false;const arrive=t;const st=Math.max(0,+s.stay||0);t+=st;stay+=st;rows.push({kind:'stop',i,leg:L,arrive,stay:st,leave:t});prev=s;});
+  const L=legFn(prev,day.end);t+=L.min;drive+=L.min;km+=L.km;if(!L.real)real=false;
+  rows.push({kind:'end',leg:L,arrive:t});
+  return {rows,drive,stay,km,end:t,total:t-toMin(day.startTime),real};
+}
+function groupOf(cat){return cat==='Food'||cat==='Cafe'?'Food':(cat==='Sight'||cat==='Activity'?'Activities':'Other');}
+function dayStats(day,f,legFn){const tl=timeline(day,legFn);return {km:tl.km,min:tl.drive,fuel:(tl.km/(+f.kmPerL||1))*(+f.price||0),tl};}
+function dayBudget(day,f,legFn){const g={Stay:+day.end.cost||0,Food:0,Activities:0,Fuel:0,Other:0};day.stops.forEach(s=>{g[groupOf(s.cat)]+=+s.cost||0;});g.Fuel=dayStats(day,f,legFn).fuel;g.total=g.Stay+g.Food+g.Activities+g.Fuel+g.Other;return g;}
+function tripBudget(S,legFn){const g={Stay:0,Food:0,Activities:0,Fuel:0,Other:0};let km=0;S.days.forEach(d=>{const b=dayBudget(d,S,legFn);for(const k in g)g[k]+=b[k];km+=dayStats(d,S,legFn).km;});const total=g.Stay+g.Food+g.Activities+g.Fuel+g.Other;return {g,total,km};}
+function parseLL(s){const m=String(s).match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);if(!m)return null;const lat=+m[1],lng=+m[2];if(Math.abs(lat)>90||Math.abs(lng)>180)return null;return {lat,lng};}
+function distToRoute(p,day){return Math.min(...[day.start,...day.stops,day.end].map(q=>hav(p,q)));}
+function kindFromOsm(k,v){
+  if(k==='amenity'){if(['restaurant','fast_food','food_court','biergarten','pub','bar'].includes(v))return 'Food';if(v==='cafe'||v==='ice_cream')return 'Cafe';if(v==='place_of_worship')return 'Sight';}
+  if(k==='shop'&&['bakery','coffee','pastry'].includes(v))return 'Cafe';
+  if(k==='tourism'){if(['attraction','museum','viewpoint','gallery','zoo','theme_park','aquarium','artwork'].includes(v))return 'Sight';}
+  if(k==='historic'||k==='natural'||k==='waterway')return 'Sight';
+  if(k==='leisure'){if(['park','garden','nature_reserve'].includes(v))return 'Sight';if(['water_park','golf_course','sports_centre','stadium','miniature_golf','resort'].includes(v))return 'Activity';}
+  return 'Other';
+}
+function placeFromFeature(f){
+  const p=(f&&f.properties)||{},c=f&&f.geometry&&f.geometry.coordinates;
+  if(!c||c.length<2||!p.name)return null;
+  const parts=[p.street?((p.housenumber?p.housenumber+' ':'')+p.street):'',p.district||p.locality||'',p.city||p.county||'',p.state||''].filter(Boolean);
+  return {name:p.name,lat:+c[1],lng:+c[0],cat:kindFromOsm(p.osm_key,p.osm_value),type:String(p.osm_value||'').replace(/_/g,' '),where:[...new Set(parts)].slice(0,3).join(', ')};
+}
+// ===== CORE END =====
+
+const DEMO_PLACES=[
+ {id:'phutthabat',name:'Wat Phra Phutthabat (Saraburi)',cat:'Sight',lat:14.727,lng:100.802,cost:0},
+ {id:'pakchong',name:'Pak Chong town, local lunch',cat:'Food',lat:14.71,lng:101.415,cost:400},
+ {id:'pbvalley',name:'PB Valley winery',cat:'Activity',lat:14.404,lng:101.429,cost:500},
+ {id:'kynp',name:'Khao Yai National Park (visitor area)',cat:'Sight',lat:14.433,lng:101.372,cost:80},
+ {id:'haewsuwat',name:'Haew Suwat Waterfall',cat:'Sight',lat:14.42,lng:101.38,cost:0},
+ {id:'grandpalace',name:'Grand Palace',cat:'Sight',lat:13.75,lng:100.4913,cost:500},
+ {id:'watarun',name:'Wat Arun',cat:'Sight',lat:13.7437,lng:100.4889,cost:100},
+ {id:'yaowarat',name:'Yaowarat (Chinatown) street food',cat:'Food',lat:13.74,lng:100.51,cost:600},
+ {id:'iconsiam',name:'ICONSIAM, dinner and river view',cat:'Food',lat:13.7267,lng:100.5105,cost:800}
+];
+const dp=id=>DEMO_PLACES.find(p=>p.id===id);
+const uid=()=>Math.random().toString(36).slice(2,8);
+function newStop(p,extra){return Object.assign({id:uid(),pid:'',name:p.name,cat:p.cat,lat:p.lat,lng:p.lng,cost:0,rating:0,note:'',stay:DEFAULT_STAY[p.cat]||30},extra||{});}
+function demoStop(id){const p=dp(id);return newStop(p,{pid:id,cost:p.cost});}
+function demo(){
+  const home={name:'Bangkok (home)',lat:13.7563,lng:100.5018};
+  const ky={name:'Khao Yai stay',lat:14.435,lng:101.365};
+  const bkk={name:'Bangkok hotel',lat:13.727,lng:100.529};
+  return {name:'Christmas Trip',people:2,target:15000,months:1,kmPerL:12,price:35,auto:true,cur:0,tab:'plan',msg:'',
+    days:[
+      {id:uid(),name:'Day 1',startTime:'08:00',start:{...home},end:{...ky,cost:2500},stops:['phutthabat','pakchong','pbvalley'].map(demoStop)},
+      {id:uid(),name:'Day 2',startTime:'09:00',start:{...ky},end:{...bkk,cost:1800},stops:['kynp','haewsuwat'].map(demoStop)},
+      {id:uid(),name:'Day 3',startTime:'09:00',start:{...bkk},end:{...home,cost:0},stops:['grandpalace','watarun','yaowarat','iconsiam'].map(demoStop)}
+    ]};
+}
+function blank(old){
+  const b={name:'My trip',lat:13.7563,lng:100.5018};
+  return {name:'My trip',people:old.people,target:old.target,months:old.months,kmPerL:old.kmPerL,price:old.price,auto:true,cur:0,tab:'plan',msg:'',
+    days:[{id:uid(),name:'Day 1',startTime:'08:00',start:{name:'Bangkok',lat:b.lat,lng:b.lng},end:{name:'Bangkok',lat:b.lat,lng:b.lng,cost:0},stops:[]}]};
+}
+
+// ---- State ----
+const KEY='tripplanner.v2';
+let S;
+try{const raw=localStorage.getItem(KEY);S=raw?JSON.parse(raw):null;if(!S||!Array.isArray(S.days)||!S.days.length)S=null;}catch(e){S=null;}
+if(!S)S=demo();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const cur=()=>S.days[S.cur];
+
+// ---- Real road times (free OSRM demo server). Falls back to an estimate. ----
+const LKEY='tripplanner.legs.v2';
+let LEGS={};try{LEGS=JSON.parse(localStorage.getItem(LKEY))||{};}catch(e){LEGS={};}
+const FAIL={},PENDING=new Set(),QUEUE=[];let busy=false;
+const lk=(a,b)=>[a.lat,a.lng,b.lat,b.lng].map(x=>(+x).toFixed(4)).join(',');
+function saveLegs(){try{const ks=Object.keys(LEGS);if(ks.length>400)ks.slice(0,ks.length-400).forEach(k=>delete LEGS[k]);localStorage.setItem(LKEY,JSON.stringify(LEGS));}catch(e){}}
+function legInfo(a,b){
+  const k=lk(a,b),c=LEGS[k];
+  if(c)return {km:c.km,min:c.min,real:true};
+  if(!FAIL[k]&&!PENDING.has(k)){PENDING.add(k);QUEUE.push({k,a,b});pump();}
+  return estLeg(a,b);
+}
+async function pump(){
+  if(busy)return;busy=true;
+  while(QUEUE.length){
+    const {k,a,b}=QUEUE.shift();
+    try{
+      const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),8000);
+      const r=await fetch('https://router.project-osrm.org/route/v1/driving/'+a.lng+','+a.lat+';'+b.lng+','+b.lat+'?overview=false',{signal:ctl.signal});
+      clearTimeout(to);
+      if(!r.ok)throw new Error('http '+r.status);
+      const j=await r.json(),rt=j.routes&&j.routes[0];
+      if(!rt)throw new Error('no route');
+      LEGS[k]={km:rt.distance/1000,min:rt.duration/60};saveLegs();softRender();
+    }catch(e){FAIL[k]=1;}
+    PENDING.delete(k);
+    await new Promise(r=>setTimeout(r,300));
+  }
+  busy=false;
+}
+let needRender=false,softTimer=null;
+function softRender(){clearTimeout(softTimer);softTimer=setTimeout(()=>{const a=document.activeElement;if(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)){needRender=true;return;}render();},150);}
+
+// ---- Search (free Photon service, built on OpenStreetMap) ----
+let SR={target:null,q:'',items:[],loading:false,err:'',ctl:null,timer:null,seq:0};
+const center=d=>({lat:(d.start.lat+d.end.lat)/2,lng:(d.start.lng+d.end.lng)/2});
+const PIN='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.500a2.500 2.500 0 0 1 0 5Z"/></svg>';
+function ddHtml(){
+  if(!SR.target)return '';
+  const q=SR.q.trim();
+  if(q.length<2)return '';
+  if(SR.loading)return '<div class="box"><div class="sr-msg">Searching…</div></div>';
+  if(SR.err)return '<div class="box"><div class="sr-msg err">'+esc(SR.err)+'</div></div>';
+  if(!SR.items.length)return '<div class="box"><div class="sr-msg">No results. Try another word.</div></div>';
+  const d=cur();
+  return '<div class="box">'+SR.items.map((p,i)=>{
+    const far=SR.target==='stop'?' · '+Math.round(distToRoute(p,d))+' km from route':'';
+    return '<div class="sr-item" data-i="'+i+'">'+PIN+'<div><div class="name">'+esc(p.name)+'</div><div class="leg">'+esc([p.type,p.where].filter(Boolean).join(' · ')+far)+'</div></div></div>';
+  }).join('')+'</div>';
+}
+function paintDD(){document.querySelectorAll('.dd').forEach(e=>{e.innerHTML='';});if(!SR.target)return;const el=document.getElementById('dd-'+SR.target);if(el)el.innerHTML=ddHtml();}
+async function runSearch(){
+  const my=++SR.seq,q=SR.q.trim();
+  if(SR.ctl)SR.ctl.abort();
+  if(q.length<2){SR.items=[];SR.loading=false;SR.err='';paintDD();return;}
+  SR.loading=true;SR.err='';paintDD();
+  const ctl=new AbortController();SR.ctl=ctl;let timedOut=false;
+  const to=setTimeout(()=>{timedOut=true;ctl.abort();},8000);
+  const c=center(cur());
+  try{
+    const r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&limit=8&lang=en&lat='+c.lat.toFixed(4)+'&lon='+c.lng.toFixed(4),{signal:ctl.signal});
+    clearTimeout(to);
+    if(!r.ok)throw new Error('http '+r.status);
+    const j=await r.json();
+    if(my!==SR.seq)return;
+    const seen=new Set();
+    SR.items=(j.features||[]).map(placeFromFeature).filter(p=>{if(!p)return false;const k=p.name+'|'+p.lat.toFixed(3)+'|'+p.lng.toFixed(3);if(seen.has(k))return false;seen.add(k);return true;});
+    SR.err='';
+  }catch(e){
+    clearTimeout(to);
+    if(e.name==='AbortError'&&!timedOut)return;
+    if(my!==SR.seq)return;
+    SR.items=[];SR.err='Search is not working now. Check your internet, or add by coordinates below.';
+  }
+  SR.loading=false;paintDD();
+}
+function pickResult(i){
+  const p=SR.items[i],d=cur();if(!p)return;
+  if(SR.target==='stop'){d.stops.push(newStop(p));if(S.auto)d.stops=bestOrder(d.start,d.stops,d.end);S.msg='';}
+  else if(SR.target==='start'){d.start={name:p.name,lat:p.lat,lng:p.lng};}
+  else if(SR.target==='end'){d.end={name:p.name,lat:p.lat,lng:p.lng,cost:+d.end.cost||0};}
+  SR.target=null;SR.items=[];SR.q='';SR.err='';SR.loading=false;
+  render();
+}
+
+// ---- Helpers ----
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const baht=n=>'฿'+Math.round(n).toLocaleString('en-US');
+
+// ---- Map (drawn route) ----
+function mapSvg(day){
+  const pts=[day.start,...day.stops,day.end];
+  const W=360,H=230,P=30;
+  const la=pts.map(p=>p.lat),lo=pts.map(p=>p.lng);
+  const minLa=Math.min(...la),maxLa=Math.max(...la),minLo=Math.min(...lo),maxLo=Math.max(...lo);
+  const k=Math.cos((minLa+maxLa)/2*Math.PI/180);
+  const w=Math.max((maxLo-minLo)*k,0.02),h=Math.max(maxLa-minLa,0.02);
+  const sc=Math.min((W-2*P)/w,(H-2*P)/h);
+  const ox=(W-w*sc)/2,oy=(H-h*sc)/2;
+  const X=p=>ox+(p.lng-minLo)*k*sc, Y=p=>oy+(maxLa-p.lat)*sc;
+  const pxPerKm=sc/111;
+  const nice=[1,2,5,10,20,50,100,200].reduce((a,b)=>Math.abs(b*pxPerKm-70)<Math.abs(a*pxPerKm-70)?b:a);
+  const poly=pts.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' ');
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Route map for '+esc(day.name)+'"><rect width="'+W+'" height="'+H+'" fill="var(--accbg)"/>';
+  for(let i=1;i<6;i++)s+='<line x1="'+(i*W/6)+'" y1="0" x2="'+(i*W/6)+'" y2="'+H+'" stroke="var(--line)" stroke-width=".7"/>';
+  for(let i=1;i<4;i++)s+='<line x1="0" y1="'+(i*H/4)+'" x2="'+W+'" y2="'+(i*H/4)+'" stroke="var(--line)" stroke-width=".7"/>';
+  s+='<polyline points="'+poly+'" fill="none" stroke="var(--acc)" stroke-width="3" stroke-linejoin="round" stroke-dasharray="7 4"/>';
+  const mk=(p,txt,anchor,label)=>{const x=X(p),y=Y(p);const right=x<W*0.6;return '<g><circle cx="'+x+'" cy="'+y+'" r="10" fill="'+(anchor?'var(--acc)':'var(--card)')+'" stroke="var(--acc)" stroke-width="2"/><text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+(anchor?'#fff':'var(--acc)')+'">'+txt+'</text>'+(label?'<text x="'+(right?x-10:x+10)+'" y="'+(y-15)+'" text-anchor="'+(right?'start':'end')+'" font-size="10" font-weight="600" fill="var(--ink)" stroke="var(--accbg)" stroke-width="3" paint-order="stroke">'+esc(label.length>18?label.slice(0,17)+'…':label)+'</text>':'')+'</g>';};
+  s+=mk(day.start,'S',true,day.start.name);
+  day.stops.forEach((p,i)=>{s+=mk(p,i+1,false,'');});
+  s+=mk(day.end,'H',true,day.end.name);
+  const bx=12,by=H-12,bw=nice*pxPerKm;
+  s+='<line x1="'+bx+'" y1="'+by+'" x2="'+(bx+bw)+'" y2="'+by+'" stroke="var(--ink)" stroke-width="2"/><text x="'+bx+'" y="'+(by-5)+'" font-size="10" fill="var(--ink)">'+nice+' km</text></svg>';
+  return s;
+}
+
+// ---- Views ----
+function legLine(L){return '<div class="driveline">'+(L.real?'':'~')+fmtDur(L.min)+' drive · '+(L.real?'':'~')+Math.round(L.km)+' km</div>';}
+function stayOptions(v){const set=new Set();for(let m=0;m<=480;m+=15)set.add(m);set.add(Math.max(0,Math.round(v)));return [...set].sort((a,b)=>a-b);}
+function stopCard(s,i,row,n){
+  let stars='';for(let k=1;k<=5;k++)stars+='<button class="'+(k<=s.rating?'on':'')+'" data-act="star" data-i="'+i+'" data-v="'+(k===s.rating?0:k)+'" aria-label="'+k+' star">★</button>';
+  const opts=stayOptions(s.stay).map(m=>'<option value="'+m+'"'+(m===Math.round(s.stay)?' selected':'')+'>'+fmtDur(m)+'</option>').join('');
+  return '<div class="card"><div class="stop"><div class="num">'+(i+1)+'</div><div><div class="name">'+esc(s.name)+'<span class="tag">'+esc(s.cat)+'</span></div>'+
+  '<div class="times"><span>Arrive '+fmtT(row.arrive)+'</span><span>Stay <select data-f="stay" data-i="'+i+'" aria-label="Stay time">'+opts+'</select></span><span>Leave '+fmtT(row.leave)+'</span></div></div>'+
+  '<div class="ctl"><button class="ic" data-act="up" data-i="'+i+'" '+(i===0?'disabled':'')+' aria-label="Move up">↑</button><button class="ic" data-act="down" data-i="'+i+'" '+(i===n-1?'disabled':'')+' aria-label="Move down">↓</button><button class="ic" data-act="del" data-i="'+i+'" aria-label="Remove">✕</button></div></div>'+
+  '<div class="stars" aria-label="Your rating">'+stars+'</div>'+
+  '<div class="fields"><input class="cost" type="number" min="0" inputmode="numeric" data-f="cost" data-i="'+i+'" value="'+(+s.cost||0)+'" aria-label="Cost in baht"><input class="note" data-f="note" data-i="'+i+'" value="'+esc(s.note||'')+'" placeholder="Your note (price, review, tip)"><a class="maps" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(s.name)+'">See reviews in Google Maps</a></div></div>';
+}
+function searchBox(target,value,ph){return '<div class="sw"><input class="sb" data-t="'+target+'" data-orig="'+esc(value)+'" value="'+esc(value)+'" placeholder="'+esc(ph)+'" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="'+esc(ph)+'"><div class="dd" id="dd-'+target+'"></div></div>';}
+function planView(){
+  const d=cur(),st=dayStats(d,S,legInfo),tl=st.tl;
+  let h='<div class="days">'+S.days.map((x,i)=>'<button class="chip '+(i===S.cur?'on':'')+'" data-act="day" data-i="'+i+'">'+esc(x.name)+'</button>').join('')+'<button class="chip" data-act="addday">+ Day</button></div>';
+  h+='<div class="card"><label class="f" style="margin-top:0">Start place</label>'+searchBox('start',d.start.name,'Search a start place')+
+     '<div class="grid2"><div><label class="f">Start time</label><input type="time" data-f="starttime" value="'+esc(d.startTime||'08:00')+'"></div><div><label class="f">Stay tonight / end</label>'+searchBox('end',d.end.name,'Search a place')+'</div></div></div>';
+  h+='<div class="card map">'+mapSvg(d)+'</div>';
+  h+='<div class="stats"><div><b>'+d.stops.length+'</b><span>stops</span></div><div><b>'+Math.round(st.km)+'</b><span>km</span></div><div><b>'+fmtDur(st.min)+'</b><span>drive</span></div><div><b>'+baht(st.fuel)+'</b><span>fuel</span></div></div>';
+  h+='<div class="row"><button class="btn" data-act="opt" '+(d.stops.length<2?'disabled':'')+'>Optimize order</button><label class="chk"><input type="checkbox" data-s="auto" '+(S.auto?'checked':'')+'> Auto-order when I add a place</label></div>';
+  if(S.msg)h+='<p class="msg">'+esc(S.msg)+'</p>';
+  h+='<div class="card"><div class="stop"><div class="num anchor">S</div><div><div class="name">'+esc(d.start.name)+'<span class="tag">Start</span></div><div class="times"><span>Leave '+fmtT(tl.rows[0].leave)+'</span></div></div><span></span></div></div>';
+  tl.rows.forEach(r=>{if(r.kind==='stop'){h+=legLine(r.leg)+stopCard(d.stops[r.i],r.i,r,d.stops.length);}});
+  const er=tl.rows[tl.rows.length-1];
+  h+=legLine(er.leg)+'<div class="card"><div class="stop"><div class="num anchor">H</div><div><div class="name">'+esc(d.end.name)+'<span class="tag">Stay tonight / end</span></div><div class="times"><span>Arrive '+fmtT(er.arrive)+'</span></div></div><span></span></div><div class="fields"><label class="note-s">Stay cost (total) <input class="cost" type="number" min="0" inputmode="numeric" data-f="endcost" value="'+(+d.end.cost||0)+'"></label></div></div>';
+  const late=tl.end>22*60;
+  h+='<div class="banner '+(late?'late':'')+'">Day total: '+fmtDur(tl.total)+' out · '+fmtDur(tl.drive)+' driving · '+fmtDur(tl.stay)+' at places'+(late?'. You arrive late ('+fmtT(tl.end)+').':'.')+'</div>';
+  h+='<div class="card"><div class="name">Add a place</div>'+searchBox('stop','','Search a place, cafe, or restaurant')+
+     '<details><summary>Can\'t find it? Add by coordinates</summary><label class="f">Name</label><input id="cn" style="width:100%"><div class="grid2"><div><label class="f">Type</label><select id="cc"><option>Sight</option><option>Food</option><option>Cafe</option><option>Activity</option><option>Other</option></select></div><div><label class="f">Cost (total, baht)</label><input id="ccost" type="number" min="0" inputmode="numeric" value="0"></div></div><label class="f">Position (lat, lng)</label><input id="cll" style="width:100%" placeholder="14.4350, 101.3650"><p class="err" id="err"></p><button class="btn" data-act="addcustom">Add to '+esc(d.name)+'</button></details></div>';
+  h+='<p class="note-s">'+(tl.real?'Drive times are from a road route service, without traffic.':'~ means estimate (straight line × 1.3, 60 km/h). Road times load when you are online.')+'</p>';
+  if(S.days.length>1)h+='<button class="link danger" data-act="delday">Remove '+esc(d.name)+'</button>';
+  return h;
+}
+function budgetView(){
+  const T=tripBudget(S,legInfo),groups=[['Stay','--s1'],['Food','--s2'],['Activities','--s3'],['Fuel','--s4'],['Other','--s5']];
+  const people=Math.max(+S.people||1,1),months=Math.max(+S.months||1,1);
+  let h='<h1>Trip budget</h1><p class="sub">Updates live as you change the plan.</p>';
+  h+='<div class="card"><div class="note-s">Total for the whole trip</div><div class="big">'+baht(T.total)+'</div><div class="line"><span>Per person ('+people+')</span><b>'+baht(T.total/people)+'</b></div>';
+  if(+S.target>0){const diff=S.target-T.total;h+='<div class="line"><span>Your limit '+baht(S.target)+'</span>'+(diff>=0?'<span class="ok">'+baht(diff)+' left</span>':'<span class="warn">Over by '+baht(-diff)+'</span>')+'</div>';}
+  h+='<div class="line"><span>Save each month ('+months+' month'+(months>1?'s':'')+')</span><b>'+baht(T.total/months)+'</b></div></div><div class="card">';
+  groups.forEach(([k,c])=>{const v=T.g[k],pc=T.total?v/T.total*100:0;h+='<div class="line"><span>'+k+'</span><span><b>'+baht(v)+'</b> <span class="note-s">'+Math.round(pc)+'%</span></span></div><div class="bar"><i style="width:'+pc+'%;background:var('+c+')"></i></div>';});
+  h+='</div><div class="card"><div class="name">By day</div><table><tr><th>Day</th><th>Stay</th><th>Food</th><th>Act.</th><th>Fuel</th><th>Total</th></tr>';
+  S.days.forEach(d=>{const b=dayBudget(d,S,legInfo);h+='<tr><td>'+esc(d.name)+'</td><td>'+Math.round(b.Stay)+'</td><td>'+Math.round(b.Food)+'</td><td>'+Math.round(b.Activities+b.Other)+'</td><td>'+Math.round(b.Fuel)+'</td><td><b>'+Math.round(b.total)+'</b></td></tr>';});
+  h+='</table></div><div class="card"><div class="name">Settings</div><div class="grid2"><div><label class="f">People</label><input type="number" min="1" data-s="people" value="'+S.people+'"></div><div><label class="f">Budget limit (baht)</label><input type="number" min="0" data-s="target" value="'+S.target+'"></div><div><label class="f">Car km per litre</label><input type="number" min="1" step="0.5" data-s="kmPerL" value="'+S.kmPerL+'"></div><div><label class="f">Fuel price (baht per litre)</label><input type="number" min="0" step="0.5" data-s="price" value="'+S.price+'"></div><div><label class="f">Months to save</label><input type="number" min="1" data-s="months" value="'+S.months+'"></div></div></div>';
+  h+='<div class="row"><button class="link" data-act="newtrip">Start a new empty trip</button><button class="link danger" data-act="reset">Reset to the demo trip</button></div>';
+  return h;
+}
+function render(){
+  const app=document.getElementById('app');
+  const head='<input class="title" data-s="name" value="'+esc(S.name||'My trip')+'" aria-label="Trip name"><p class="sub">Search places, set times, and watch the budget.</p>';
+  const body=S.tab==='plan'?head+planView():budgetView();
+  const nav=[['plan','Plan'],['budget','Budget']].map(([k,l])=>'<button class="'+(S.tab===k?'on':'')+'" data-act="tab" data-v="'+k+'">'+l+'</button>').join('');
+  app.innerHTML=body+'<nav><div>'+nav+'</div></nav>';
+  needRender=false;
+  save();
+}
+
+// ---- Events ----
+function setDay(i){S.cur=i;S.msg='';SR.target=null;SR.items=[];}
+document.addEventListener('click',e=>{
+  const it=e.target.closest('.sr-item');
+  if(it){pickResult(+it.dataset.i);return;}
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act,d=cur(),i=+b.dataset.i;
+  if(a==='tab'){S.tab=b.dataset.v;S.msg='';}
+  else if(a==='day')setDay(i);
+  else if(a==='addday'){const last=S.days[S.days.length-1];S.days.push({id:uid(),name:'Day '+(S.days.length+1),startTime:'09:00',start:{name:last.end.name,lat:last.end.lat,lng:last.end.lng},end:{name:last.end.name,lat:last.end.lat,lng:last.end.lng,cost:0},stops:[]});setDay(S.days.length-1);}
+  else if(a==='delday'){S.days.splice(S.cur,1);S.days.forEach((x,k)=>{if(/^Day \d+$/.test(x.name))x.name='Day '+(k+1);});setDay(Math.min(S.cur,S.days.length-1));}
+  else if(a==='opt'){const before=routeKm(d.start,d.stops,d.end);d.stops=bestOrder(d.start,d.stops,d.end);const saved=before-routeKm(d.start,d.stops,d.end);S.msg=saved>0.5?'Done. New order saves about '+Math.round(saved)+' km.':'Your order is already the shortest.';}
+  else if(a==='del'){d.stops.splice(i,1);S.msg='';}
+  else if(a==='up'&&i>0){[d.stops[i-1],d.stops[i]]=[d.stops[i],d.stops[i-1]];S.msg='';}
+  else if(a==='down'&&i<d.stops.length-1){[d.stops[i+1],d.stops[i]]=[d.stops[i],d.stops[i+1]];S.msg='';}
+  else if(a==='star'){d.stops[i].rating=+b.dataset.v;}
+  else if(a==='addcustom'){
+    const name=document.getElementById('cn').value.trim(),ll=parseLL(document.getElementById('cll').value),err=document.getElementById('err');
+    if(!name){err.textContent='Type a name.';return;}
+    if(!ll){err.textContent='Position looks wrong. Use two numbers like 14.4350, 101.3650.';return;}
+    const cat=document.getElementById('cc').value;
+    d.stops.push(newStop({name,cat,lat:ll.lat,lng:ll.lng},{cost:+document.getElementById('ccost').value||0}));
+    if(S.auto)d.stops=bestOrder(d.start,d.stops,d.end);
+  }
+  else if(a==='newtrip'){S=blank(S);S.tab='plan';}
+  else if(a==='reset'){const keep={people:S.people,target:S.target,months:S.months,kmPerL:S.kmPerL,price:S.price};S=Object.assign(demo(),keep);S.tab='budget';}
+  render();
+});
+document.addEventListener('mousedown',e=>{if(e.target.closest('.sr-item'))e.preventDefault();});
+document.addEventListener('input',e=>{
+  const t=e.target;if(!t.classList||!t.classList.contains('sb'))return;
+  SR.target=t.dataset.t;SR.q=t.value;SR.items=[];SR.err='';
+  clearTimeout(SR.timer);
+  if(t.value.trim().length<2){SR.seq++;if(SR.ctl)SR.ctl.abort();SR.loading=false;paintDD();return;}
+  SR.loading=true;paintDD();
+  SR.timer=setTimeout(runSearch,350);
+});
+document.addEventListener('focusin',e=>{
+  const t=e.target;if(!t.classList||!t.classList.contains('sb'))return;
+  SR.target=t.dataset.t;SR.q='';SR.items=[];SR.err='';SR.loading=false;
+  if(t.dataset.t!=='stop')t.select();
+});
+document.addEventListener('focusout',e=>{
+  const t=e.target;
+  setTimeout(()=>{
+    const a=document.activeElement;
+    if(t.classList&&t.classList.contains('sb')&&a!==t){t.value=t.dataset.orig;if(SR.target===t.dataset.t){SR.target=null;SR.items=[];SR.q='';SR.loading=false;if(SR.ctl)SR.ctl.abort();SR.seq++;}paintDD();}
+    if(needRender&&!(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)))render();
+  },220);
+});
+document.addEventListener('change',e=>{
+  const t=e.target,d=cur();
+  if(t.dataset.s){const k=t.dataset.s;S[k]=t.type==='checkbox'?t.checked:(t.type==='number'?(+t.value||0):t.value);}
+  else if(t.dataset.f){
+    const f=t.dataset.f,i=+t.dataset.i;
+    if(f==='cost')d.stops[i].cost=Math.max(0,+t.value||0);
+    else if(f==='note')d.stops[i].note=t.value;
+    else if(f==='endcost')d.end.cost=Math.max(0,+t.value||0);
+    else if(f==='stay')d.stops[i].stay=+t.value||0;
+    else if(f==='starttime')d.startTime=t.value||'08:00';
+  } else return;
+  S.msg='';render();
+});
+render();
+</script>
+</body>
+</html>
